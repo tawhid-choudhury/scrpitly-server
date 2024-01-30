@@ -39,6 +39,7 @@ async function run() {
   try {
     const database = client.db("scriptlyDB");
     const articleCollection = database.collection("articleCollection");
+    const commentCollection = database.collection("commentCollection");
 
     // Send a ping to confirm a successful connection
     console.log(
@@ -50,6 +51,22 @@ async function run() {
         let query = {};
         const cursor = articleCollection.find({}).sort({ timestamp: -1 });
         const result = await cursor.toArray();
+        return res.send(result);
+      } catch (error) {
+        console.error("Error fetching all articles:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+
+    app.get("/allCommentsForAnArticle/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        const cursor = commentCollection
+          .find({ articleId: id })
+          .sort({ timestamp: -1 });
+        const result = await cursor.toArray();
+
         return res.send(result);
       } catch (error) {
         console.error("Error fetching all articles:", error);
@@ -81,6 +98,25 @@ async function run() {
         return res.send(result);
       } catch (error) {
         console.error("Error posting article:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+
+    app.post("/addComment/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        console.log(req.body);
+        const comment = req.body;
+        console.log(comment, "asdasd");
+
+        comment.timestamp = Date.now();
+        comment.articleId = id;
+        const result = await commentCollection.insertOne(comment);
+        console.log(result);
+        console.log(comment);
+        return res.send(result);
+      } catch (error) {
+        console.error("Error posting comment:", error);
         return res.status(500).send("Internal Server Error");
       }
     });
