@@ -40,11 +40,36 @@ async function run() {
     const database = client.db("scriptlyDB");
     const articleCollection = database.collection("articleCollection");
     const commentCollection = database.collection("commentCollection");
+    const UserCollection = database.collection("UserCollection");
 
     // Send a ping to confirm a successful connection
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
+    // get user
+    app.get("/all-users", async (req, res) => {
+      try {
+        const cursor = UserCollection.find();
+        const result = await cursor.toArray();
+        return res.send(result);
+      } catch (error) {
+        console.error("Error fetching all User:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+    // post User
+    app.post("/post-user", async (req, res) => {
+      try {
+        const user = req.body;
+        const result = await UserCollection.insertOne(user);
+        console.log(result);
+        return res.send(result);
+      } catch (error) {
+        console.error("Error posting article:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+
 
     app.get("/allArticle", async (req, res) => {
       try {
