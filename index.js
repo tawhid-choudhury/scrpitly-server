@@ -40,12 +40,42 @@ async function run() {
     const database = client.db("scriptlyDB");
     const articleCollection = database.collection("articleCollection");
     const commentCollection = database.collection("commentCollection");
+    const UserCollection = database.collection("UserCollection");
     const likeCollection = database.collection("likeCollection");
 
     // Send a ping to confirm a successful connection
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
+    // get user
+    app.get("/all-users", async (req, res) => {
+      try {
+        const cursor = UserCollection.find();
+        const result = await cursor.toArray();
+        return res.send(result);
+      } catch (error) {
+        console.error("Error fetching all User:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+    // post User after checking if the user new or old
+    app.post("/post-user", async (req, res) => {
+      try {
+        const NewUser = req.body;
+        const query = { email: NewUser.email }
+        const existingUser = await UserCollection.findOne(query);
+        if (existingUser) {
+          return res.send({ message: "User Already Exists", insertedId: null })
+        }
+        const result = await UserCollection.insertOne(NewUser);
+        console.log(result);
+        return res.send(result);
+      } catch (error) {
+        console.error("Error posting article:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+
 
     app.get("/allArticle", async (req, res) => {
       try {
