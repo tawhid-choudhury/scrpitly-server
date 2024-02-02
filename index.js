@@ -40,6 +40,7 @@ async function run() {
     const database = client.db("scriptlyDB");
     const articleCollection = database.collection("articleCollection");
     const commentCollection = database.collection("commentCollection");
+    const likeCollection = database.collection("likeCollection");
 
     // Send a ping to confirm a successful connection
     console.log(
@@ -70,6 +71,36 @@ async function run() {
         return res.send(result);
       } catch (error) {
         console.error("Error fetching all articles:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+
+    app.get("/checkLike/:id", async (req, res) => {
+      try {
+        console.log("CHECKING LIKE");
+        const id = req.params.id;
+        const userEmail = req.query.userEmail; // Assuming userEmail is passed as a query parameter
+        console.log(
+          "Received parameters - articleId:",
+          id,
+          "userEmail:",
+          userEmail
+        );
+
+        const like = await likeCollection.findOne({
+          articleId: id,
+          userEmail: userEmail,
+        });
+
+        if (like) {
+          console.log("like found");
+          return res.json({ isLiked: true });
+        } else {
+          console.log("like not found");
+          return res.json({ isLiked: false });
+        }
+      } catch (error) {
+        console.error("Error checking like:", error);
         return res.status(500).send("Internal Server Error");
       }
     });
@@ -117,6 +148,52 @@ async function run() {
         return res.send(result);
       } catch (error) {
         console.error("Error posting comment:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+
+    app.post("/addLike/:id", async (req, res) => {
+      try {
+        console.log("ADDING LIKE");
+        const id = req.params.id;
+        const userEmail = req.body;
+        userEmail.timestamp = Date.now();
+        userEmail.articleId = id;
+        const result = await likeCollection.insertOne(userEmail);
+
+        return res.send(result);
+      } catch (error) {
+        console.error("Error adding like:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+    app.delete("/deleteLike/:id", async (req, res) => {
+      try {
+        console.log("DELETING LIKE");
+        const id = req.params.id;
+        const userEmail = req.body.userEmail;
+        console.log(
+          "Received parameters - articleId:",
+          id,
+          "userEmail:",
+          userEmail
+        );
+
+        const result = await likeCollection.deleteOne({
+          articleId: id,
+          userEmail: userEmail,
+        });
+        console.log("Delete result:", result);
+
+        if (result.deletedCount === 1) {
+          console.log("Like deleted successfully");
+          return res.send("Like deleted successfully");
+        } else {
+          console.log("Like not found");
+          return res.status(404).send("Like not found");
+        }
+      } catch (error) {
+        console.error("Error deleting like:", error);
         return res.status(500).send("Internal Server Error");
       }
     });
