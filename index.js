@@ -58,7 +58,7 @@ async function run() {
         return res.status(500).send("Internal Server Error");
       }
     });
-    // post User
+    // post User after checking if the user new or old
     app.post("/post-user", async (req, res) => {
       try {
         const NewUser = req.body;
