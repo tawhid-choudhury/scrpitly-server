@@ -41,6 +41,7 @@ async function run() {
     const database = client.db("scriptlyDB");
     const articleCollection = database.collection("articleCollection");
     const commentCollection = database.collection("commentCollection");
+    const communityPostCollection = database.collection("communityPost");
 
     // Send a ping to confirm a successful connection
     console.log(
@@ -121,6 +122,36 @@ async function run() {
         return res.status(500).send("Internal Server Error");
       }
     });
+    //**********community section*******************************
+
+    // community Add post 
+    app.post("/v1/api/posts", async (req, res) => {
+      try {
+        console.log(req.body);
+        const communityPosts = req.body;
+        communityPosts.timestamp = Date.now();
+        const result = await communityPostCollection.insertOne(communityPosts);
+        console.log(result);
+        return res.send(result);
+      } catch (error) {
+        console.error("Error posting article:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+
+    // community get post 
+    app.get("/v1/api/posts", async (req, res) => {
+      try {
+        let query = {};
+        const cursor = communityPostCollection.find({}).sort({ timestamp: -1 });
+        const result = await cursor.toArray();
+        return res.send(result);
+      } catch (error) {
+        console.error("Error fetching all articles:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+
   } finally {
   }
 }
