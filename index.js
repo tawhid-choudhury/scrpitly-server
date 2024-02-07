@@ -5,6 +5,7 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
 
+
 app.use(
   cors({
     origin: [
@@ -40,42 +41,13 @@ async function run() {
     const database = client.db("scriptlyDB");
     const articleCollection = database.collection("articleCollection");
     const commentCollection = database.collection("commentCollection");
-    const UserCollection = database.collection("UserCollection");
-    const likeCollection = database.collection("likeCollection");
+    const communityPostCollection = database.collection("communityPost");
+    const communityCommentsCollection = database.collection("communityComments");
 
     // Send a ping to confirm a successful connection
-    // console.log(
-    //   "Pinged your deployment. You successfully connected to MongoDB!"
-    // );
-    // get user
-    app.get("/all-users", async (req, res) => {
-      try {
-        const cursor = UserCollection.find();
-        const result = await cursor.toArray();
-        return res.send(result);
-      } catch (error) {
-        console.error("Error fetching all User:", error);
-        return res.status(500).send("Internal Server Error");
-      }
-    });
-    // post User after checking if the user new or old
-    app.post("/post-user", async (req, res) => {
-      try {
-        const NewUser = req.body;
-        const query = { email: NewUser.email }
-        const existingUser = await UserCollection.findOne(query);
-        if (existingUser) {
-          return res.send({ message: "User Already Exists", insertedId: null })
-        }
-        const result = await UserCollection.insertOne(NewUser);
-        console.log(result);
-        return res.send(result);
-      } catch (error) {
-        console.error("Error posting article:", error);
-        return res.status(500).send("Internal Server Error");
-      }
-    });
-
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
 
     app.get("/allArticle", async (req, res) => {
       try {
@@ -101,36 +73,6 @@ async function run() {
         return res.send(result);
       } catch (error) {
         console.error("Error fetching all articles:", error);
-        return res.status(500).send("Internal Server Error");
-      }
-    });
-
-    app.get("/checkLike/:id", async (req, res) => {
-      try {
-        console.log("CHECKING LIKE");
-        const id = req.params.id;
-        const userEmail = req.query.userEmail; // Assuming userEmail is passed as a query parameter
-        console.log(
-          "Received parameters - articleId:",
-          id,
-          "userEmail:",
-          userEmail
-        );
-
-        const like = await likeCollection.findOne({
-          articleId: id,
-          userEmail: userEmail,
-        });
-
-        if (like) {
-          console.log("like found");
-          return res.json({ isLiked: true });
-        } else {
-          console.log("like not found");
-          return res.json({ isLiked: false });
-        }
-      } catch (error) {
-        console.error("Error checking like:", error);
         return res.status(500).send("Internal Server Error");
       }
     });
@@ -181,52 +123,64 @@ async function run() {
         return res.status(500).send("Internal Server Error");
       }
     });
+    //**********community section Start ******************* 
 
-    app.post("/addLike/:id", async (req, res) => {
+    // community Add post 
+    app.post("/v1/api/posts", async (req, res) => {
       try {
-        console.log("ADDING LIKE");
-        const id = req.params.id;
-        const userEmail = req.body;
-        userEmail.timestamp = Date.now();
-        userEmail.articleId = id;
-        const result = await likeCollection.insertOne(userEmail);
-
+        console.log(req.body);
+        const communityPosts = req.body;
+        communityPosts.timestamp = Date.now();
+        const result = await communityPostCollection.insertOne(communityPosts);
+        console.log(result);
         return res.send(result);
       } catch (error) {
-        console.error("Error adding like:", error);
+        console.error("Error posting article:", error);
         return res.status(500).send("Internal Server Error");
       }
     });
-    app.delete("/deleteLike/:id", async (req, res) => {
+
+    // community get post 
+    app.get("/v1/api/posts", async (req, res) => {
       try {
-        console.log("DELETING LIKE");
-        const id = req.params.id;
-        const userEmail = req.body.userEmail;
-        console.log(
-          "Received parameters - articleId:",
-          id,
-          "userEmail:",
-          userEmail
-        );
-
-        const result = await likeCollection.deleteOne({
-          articleId: id,
-          userEmail: userEmail,
-        });
-        console.log("Delete result:", result);
-
-        if (result.deletedCount === 1) {
-          console.log("Like deleted successfully");
-          return res.send("Like deleted successfully");
-        } else {
-          console.log("Like not found");
-          return res.status(404).send("Like not found");
-        }
+        let query = {};
+        const cursor = communityPostCollection.find({}).sort({ timestamp: -1 });
+        const result = await cursor.toArray();
+        return res.send(result);
       } catch (error) {
-        console.error("Error deleting like:", error);
+        console.error("Error fetching all articles:", error);
         return res.status(500).send("Internal Server Error");
       }
     });
+    // community Comment Section 
+     // community get Comments 
+    app.post("/v1/api/CommunityComments", async (req, res) => {
+      try {
+        console.log(req.body);
+        const communityComment = req.body;
+        communityComment.timestamp = Date.now();
+        const result = await communityCommentsCollection.insertOne(communityComment);
+        console.log(result);
+        return res.send(result);
+      } catch (error) {
+        console.error("Error posting article:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+    // community get post 
+    app.get("/v1/api/CommunityComments", async (req, res) => {
+      try {
+        let query = {};
+        const cursor = communityCommentsCollection.find({}).sort({ timestamp: -1 });
+        const result = await cursor.toArray();
+        return res.send(result);
+      } catch (error) {
+        console.error("Error fetching all articles:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+     //**********community section End ******************* 
+
   } finally {
   }
 }
