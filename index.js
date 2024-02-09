@@ -49,6 +49,7 @@ async function run() {
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
+    // get user
     app.get("/v1/api/all-users", async (req, res) => {
       const result = await UserCollection.find().toArray();
       res.send(result);
