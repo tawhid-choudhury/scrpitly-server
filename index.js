@@ -41,14 +41,36 @@ async function run() {
     const articleCollection = database.collection("articleCollection");
     const commentCollection = database.collection("commentCollection");
     const communityPostCollection = database.collection("communityPost");
-    const communityCommentsCollection =
-      database.collection("communityComments");
+    const UserCollection = database.collection("Users");
+    const communityCommentsCollection = database.collection("communityComments");
     const likeCollection = database.collection("likeCollection");
 
     // Send a ping to confirm a successful connection
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
+    // get user
+    app.get("/v1/api/all-users", async (req, res) => {
+      const result = await UserCollection.find().toArray();
+      res.send(result);
+    })
+
+    // post User
+    app.post(`/v1/api/post-user`, async (req, res) => {
+      const NewUser = req.body;
+      console.log(NewUser);
+
+      // Check google user
+
+      const query = { email: NewUser.email }
+      const existingUser = await UserCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "User Already Exists", insertedId: null })
+      }
+
+      const result = await UserCollection.insertOne(NewUser);
+      res.send(result);
+    })
 
     app.get("/totalPages", async (req, res) => {
       try {
@@ -265,10 +287,8 @@ async function run() {
         return res.status(500).send("Internal Server Error");
       }
     });
-    // community Comment Section
-    // community get Comments
-    // community Comment Section
-    // community get Comments
+    // community Comment Section 
+    // community get Comments 
     app.post("/v1/api/CommunityComments", async (req, res) => {
       try {
         console.log(req.body);
