@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -237,6 +237,7 @@ async function run() {
     //**********community section Start *******************
 
     // community Add post
+    // community Add post
     app.post("/v1/api/posts", async (req, res) => {
       try {
         console.log(req.body);
@@ -252,6 +253,7 @@ async function run() {
     });
 
     // community get post
+    // community get post
     app.get("/v1/api/posts", async (req, res) => {
       try {
         let query = {};
@@ -265,6 +267,8 @@ async function run() {
     });
     // community Comment Section
     // community get Comments
+    // community Comment Section
+    // community get Comments
     app.post("/v1/api/CommunityComments", async (req, res) => {
       try {
         console.log(req.body);
@@ -273,6 +277,7 @@ async function run() {
         const result = await communityCommentsCollection.insertOne(
           communityComment
         );
+
         console.log(result);
         return res.send(result);
       } catch (error) {
@@ -281,12 +286,14 @@ async function run() {
       }
     });
     // community get post
+    // community get post
     app.get("/v1/api/CommunityComments", async (req, res) => {
       try {
         let query = {};
         const cursor = communityCommentsCollection
           .find({})
           .sort({ timestamp: -1 });
+
         const result = await cursor.toArray();
         return res.send(result);
       } catch (error) {
