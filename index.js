@@ -301,6 +301,23 @@ async function run() {
         return res.status(500).send("Internal Server Error");
       }
     });
+
+    // like section
+    app.post("/v1/api/posts/:postId/like", async (req, res) => {
+      try {
+        const postId = req.params.postId;
+        // Update the like count in the database for the specified post
+        await communityPostCollection.updateOne(
+          { _id: new ObjectId(postId) },
+          { $inc: { likes: 1 } }
+        );
+        return res.sendStatus(200);
+      } catch (error) {
+        console.error("Error liking post:", error);
+        return res.status(500).json({ error: error.message }); // Log the error message
+      }
+    });
+
     //**********community section End *******************
   } finally {
   }
