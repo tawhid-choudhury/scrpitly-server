@@ -186,7 +186,7 @@ async function run() {
     });
 
     // like section 
-    app.post("/v1/api/posts/:postId/like", async (req, res) => {
+    app.post("/v1/api/posts/:postId", async (req, res) => {
       try {
         const postId = req.params.postId;
         // Update the like count in the database for the specified post
@@ -201,7 +201,7 @@ async function run() {
       }
     });
     
-    
+
     //**********community section End *******************
   } finally {
   }
