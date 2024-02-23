@@ -42,7 +42,8 @@ async function run() {
     const commentCollection = database.collection("commentCollection");
     const communityPostCollection = database.collection("communityPost");
     const UserCollection = database.collection("Users");
-    const communityCommentsCollection = database.collection("communityComments");
+    const communityCommentsCollection =
+      database.collection("communityComments");
     const likeCollection = database.collection("likeCollection");
 
     // Send a ping to confirm a successful connection
@@ -53,7 +54,7 @@ async function run() {
     app.get("/v1/api/all-users", async (req, res) => {
       const result = await UserCollection.find().toArray();
       res.send(result);
-    })
+    });
 
     // post User
     app.post(`/v1/api/post-user`, async (req, res) => {
@@ -62,15 +63,15 @@ async function run() {
 
       // Check google user
 
-      const query = { email: NewUser.email }
+      const query = { email: NewUser.email };
       const existingUser = await UserCollection.findOne(query);
       if (existingUser) {
-        return res.send({ message: "User Already Exists", insertedId: null })
+        return res.send({ message: "User Already Exists", insertedId: null });
       }
 
       const result = await UserCollection.insertOne(NewUser);
       res.send(result);
-    })
+    });
 
     app.get("/totalPages", async (req, res) => {
       try {
@@ -81,7 +82,7 @@ async function run() {
           ? { title: { $regex: new RegExp(search, "i") } }
           : {};
 
-        console.log("total", searchQuery);
+        // console.log("total", searchQuery);
         const totalArticles = await articleCollection.countDocuments(
           searchQuery
         );
@@ -120,15 +121,15 @@ async function run() {
     });
     app.get("/checkLike/:id", async (req, res) => {
       try {
-        console.log("CHECKING LIKE");
+        // console.log("CHECKING LIKE");
         const id = req.params.id;
         const userEmail = req.query.userEmail; // Assuming userEmail is passed as a query parameter
-        console.log(
-          "Received parameters - articleId:",
-          id,
-          "userEmail:",
-          userEmail
-        );
+        // console.log(
+        //   "Received parameters - articleId:",
+        //   id,
+        //   "userEmail:",
+        //   userEmail
+        // );
 
         const like = await likeCollection.findOne({
           articleId: id,
@@ -136,10 +137,10 @@ async function run() {
         });
 
         if (like) {
-          console.log("like found");
+          // console.log("like found");
           return res.json({ isLiked: true });
         } else {
-          console.log("like not found");
+          // console.log("like not found");
           return res.json({ isLiked: false });
         }
       } catch (error) {
@@ -178,13 +179,58 @@ async function run() {
       }
     });
 
+    app.get("/mostLikedArticles", async (req, res) => {
+      try {
+        // Find the top 5 liked articles
+        const mostLikedArticleIds = await likeCollection
+          .aggregate([
+            { $group: { _id: "$articleId", totalLikes: { $sum: 1 } } },
+            { $sort: { totalLikes: -1 } },
+            { $limit: 5 },
+          ])
+          .toArray();
+
+        // Fetch articles from articleCollection based on the obtained IDs
+        const mostLikedArticles = await articleCollection
+          .find({
+            _id: {
+              $in: mostLikedArticleIds.map(
+                (likeInfo) => new ObjectId(likeInfo._id)
+              ),
+            },
+          })
+          .toArray();
+
+        console.log(mostLikedArticles);
+        return res.json(mostLikedArticles);
+      } catch (error) {
+        console.error("Error fetching most liked articles:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+
+    app.get("/totalLikes/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        const totalLikes = await likeCollection.countDocuments({
+          articleId: id,
+        });
+
+        return res.json({ totalLikes });
+      } catch (error) {
+        console.error("Error fetching total likes:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+
     app.post("/addArticle", async (req, res) => {
       try {
-        console.log(req.body);
+        // console.log(req.body);
         const article = req.body;
         article.timestamp = Date.now();
         const result = await articleCollection.insertOne(article);
-        console.log(result);
+        // console.log(result);
         return res.send(result);
       } catch (error) {
         console.error("Error posting article:", error);
@@ -195,15 +241,15 @@ async function run() {
     app.post("/addComment/:id", async (req, res) => {
       try {
         const id = req.params.id;
-        console.log(req.body);
+        // console.log(req.body);
         const comment = req.body;
-        console.log(comment, "asdasd");
+        // console.log(comment, "asdasd");
 
         comment.timestamp = Date.now();
         comment.articleId = id;
         const result = await commentCollection.insertOne(comment);
-        console.log(result);
-        console.log(comment);
+        // console.log(result);
+        // console.log(comment);
         return res.send(result);
       } catch (error) {
         console.error("Error posting comment:", error);
@@ -287,8 +333,8 @@ async function run() {
         return res.status(500).send("Internal Server Error");
       }
     });
-    // community Comment Section 
-    // community get Comments 
+    // community Comment Section
+    // community get Comments
     app.post("/v1/api/CommunityComments", async (req, res) => {
       try {
         console.log(req.body);
