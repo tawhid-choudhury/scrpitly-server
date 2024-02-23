@@ -71,7 +71,32 @@ async function run() {
       const result = await UserCollection.insertOne(NewUser);
       res.send(result);
     })
-
+    // patch user for edit profile
+    app.patch("/v1/api/patch-user/:id", async (req, res) => {
+      try {
+        const item = req.body;
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) }
+    
+        // Create an object to store the fields that need to be updated
+        const updatedDoc = { $set: {} };
+    
+        // Loop to set only selected field received form ClientSide
+        Object.keys(item).forEach(key => {
+          updatedDoc.$set[key] = item[key];
+        });
+    
+        // console.log("coming from patch req", item, id, filter, updatedDoc);
+    
+        const result = await UserCollection.updateOne(filter, updatedDoc)
+        res.send(result);
+      } catch (error) {
+        console.error("Error updating user:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+    
+    // get total Pages
     app.get("/totalPages", async (req, res) => {
       try {
         const pageSize = 5;
