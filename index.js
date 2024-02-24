@@ -258,7 +258,7 @@ async function run() {
     });
     //**********community section Start *******************
 
-    // community Add post
+  
     // community Add post
     app.post("/v1/api/posts", async (req, res) => {
       try {
@@ -274,7 +274,7 @@ async function run() {
       }
     });
 
-    // community get post
+    
     // community get post
     app.get("/v1/api/posts", async (req, res) => {
       try {
@@ -323,12 +323,27 @@ async function run() {
     });
 
     // like section 
-    app.post("/v1/api/posts/:postId/like", async (req, res) => {
+    // app.post("/v1/api/posts/:postId/like", async (req, res) => {
+    //   try {
+    //     const postId = req.params.postId;
+    //     // Update the like count in the database for the specified post
+    //     await communityPostCollection.updateOne(
+    //       { _id:new ObjectId(postId) },
+    //       { $inc: { likes: 1 } }
+    //     );
+    //     return res.sendStatus(200);
+    //   } catch (error) {
+    //     console.error("Error liking post:", error);
+    //     return res.status(500).json({ error: error.message }); // Log the error message
+    //   }
+    // });
+    
+    app.post("/v1/api/posts/:postId/likes", async (req, res) => {
       try {
         const postId = req.params.postId;
         // Update the like count in the database for the specified post
         await communityPostCollection.updateOne(
-          { _id:new ObjectId(postId) },
+          { _id: new ObjectId(postId) },
           { $inc: { likes: 1 } }
         );
         return res.sendStatus(200);
@@ -337,8 +352,6 @@ async function run() {
         return res.status(500).json({ error: error.message }); // Log the error message
       }
     });
-    
-    
     //**********community section End *******************
   } finally {
   }
