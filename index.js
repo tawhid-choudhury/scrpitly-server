@@ -181,7 +181,6 @@ async function run() {
 
     app.get("/mostLikedArticles", async (req, res) => {
       try {
-        // Find the top 5 liked articles
         const mostLikedArticleIds = await likeCollection
           .aggregate([
             { $group: { _id: "$articleId", totalLikes: { $sum: 1 } } },
@@ -190,7 +189,6 @@ async function run() {
           ])
           .toArray();
 
-        // Fetch articles from articleCollection based on the obtained IDs
         const mostLikedArticles = await articleCollection
           .find({
             _id: {
@@ -199,9 +197,21 @@ async function run() {
               ),
             },
           })
+          .sort({ totalLikes: -1 })
           .toArray();
 
-        console.log(mostLikedArticles);
+        mostLikedArticles.sort((a, b) => {
+          const totalLikesA = mostLikedArticleIds.find(
+            (likeInfo) => likeInfo._id.toString() === a._id.toString()
+          ).totalLikes;
+          const totalLikesB = mostLikedArticleIds.find(
+            (likeInfo) => likeInfo._id.toString() === b._id.toString()
+          ).totalLikes;
+
+          return totalLikesB - totalLikesA;
+        });
+
+        console.log(mostLikedArticleIds);
         return res.json(mostLikedArticles);
       } catch (error) {
         console.error("Error fetching most liked articles:", error);
