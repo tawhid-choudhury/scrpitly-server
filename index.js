@@ -77,14 +77,15 @@ async function run() {
         const item = req.body;
         const id = req.params.id;
         const filter = { _id: new ObjectId(id) }
-    
+        
         // Create an object to store the fields that need to be updated
         const updatedDoc = { $set: {} };
-    
+        
         // Loop to set only selected field received form ClientSide
         Object.keys(item).forEach(key => {
           updatedDoc.$set[key] = item[key];
         });
+        console.log("coming from patch call",filter, updatedDoc);
     
         // console.log("coming from patch req", item, id, filter, updatedDoc);
     
