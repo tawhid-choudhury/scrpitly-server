@@ -45,6 +45,7 @@ async function run() {
     const UserCollection = database.collection("Users");
     const communityCommentsCollection =
       database.collection("communityComments");
+    const communityLikeCollection = database.collection("communityLike");
     const likeCollection = database.collection("likeCollection");
 
     // Send a ping to confirm a successful connection
@@ -60,7 +61,7 @@ async function run() {
     // post User
     app.post(`/v1/api/post-user`, async (req, res) => {
       const NewUser = req.body;
-      console.log(NewUser);
+      // console.log(NewUser);
 
       // Check google user
 
@@ -73,7 +74,33 @@ async function run() {
       const result = await UserCollection.insertOne(NewUser);
       res.send(result);
     });
+    // patch user for edit profile
+    app.patch("/v1/api/patch-user/:id", async (req, res) => {
+      try {
+        const item = req.body;
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
 
+        // Create an object to store the fields that need to be updated
+        const updatedDoc = { $set: {} };
+
+        // Loop to set only selected field received form ClientSide
+        Object.keys(item).forEach((key) => {
+          updatedDoc.$set[key] = item[key];
+        });
+        console.log("coming from patch call", filter, updatedDoc);
+
+        // console.log("coming from patch req", item, id, filter, updatedDoc);
+
+        const result = await UserCollection.updateOne(filter, updatedDoc);
+        res.send(result);
+      } catch (error) {
+        console.error("Error updating user:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+
+    // get total Pages
     app.get("/totalPages", async (req, res) => {
       try {
         const pageSize = 5;
@@ -316,7 +343,6 @@ async function run() {
     //**********community section Start *******************
 
     // community Add post
-    // community Add post
     app.post("/v1/api/posts", async (req, res) => {
       try {
         console.log(req.body);
@@ -331,7 +357,6 @@ async function run() {
       }
     });
 
-    // community get post
     // community get post
     app.get("/v1/api/posts", async (req, res) => {
       try {
@@ -363,7 +388,6 @@ async function run() {
       }
     });
     // community get post
-    // community get post
     app.get("/v1/api/CommunityComments", async (req, res) => {
       try {
         let query = {};
@@ -380,18 +404,34 @@ async function run() {
     });
 
     // like section
-    app.post("/v1/api/posts/:postId/like", async (req, res) => {
+    app.post("/v1/api/posts/:postId/likes", async (req, res) => {
       try {
         const postId = req.params.postId;
-        // Update the like count in the database for the specified post
-        await communityPostCollection.updateOne(
-          { _id: new ObjectId(postId) },
-          { $inc: { likes: 1 } }
-        );
+        const userEmail = req.body.userEmail;
+
+        const likedPost = await communityPostCollection.findOne({
+          _id: new ObjectId(postId),
+          likedBy: userEmail,
+        });
+
+        if (likedPost) {
+          await communityPostCollection.updateOne(
+            { _id: new ObjectId(postId) },
+            { $inc: { likes: -1 }, $pull: { likedBy: userEmail } }
+          );
+          console.log(`Post ${postId} unliked by user ${userEmail}`);
+        } else {
+          await communityPostCollection.updateOne(
+            { _id: new ObjectId(postId) },
+            { $inc: { likes: 1 }, $push: { likedBy: userEmail } }
+          );
+          console.log(`Post ${postId} liked by user ${userEmail}`);
+        }
+
         return res.sendStatus(200);
       } catch (error) {
         console.error("Error liking post:", error);
-        return res.status(500).json({ error: error.message }); // Log the error message
+        return res.status(500).json({ error: error.message });
       }
     });
 
