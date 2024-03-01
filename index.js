@@ -43,6 +43,7 @@ async function run() {
     const communityPostCollection = database.collection("communityPost");
     const UserCollection = database.collection("Users");
     const communityCommentsCollection = database.collection("communityComments");
+    const communityLikeCollection = database.collection("communityLike");
     const likeCollection = database.collection("likeCollection");
 
     // Send a ping to confirm a successful connection
@@ -58,7 +59,7 @@ async function run() {
     // post User
     app.post(`/v1/api/post-user`, async (req, res) => {
       const NewUser = req.body;
-      console.log(NewUser);
+      // console.log(NewUser);
 
       // Check google user
 
@@ -210,7 +211,7 @@ async function run() {
         const article = req.body;
         article.timestamp = Date.now();
         const result = await articleCollection.insertOne(article);
-        console.log(result);
+        // console.log(result);
         return res.send(result);
       } catch (error) {
         console.error("Error posting article:", error);
@@ -332,7 +333,6 @@ async function run() {
       }
     });
     // community get post
-    // community get post
     app.get("/v1/api/CommunityComments", async (req, res) => {
       try {
         let query = {};
@@ -349,35 +349,38 @@ async function run() {
     });
 
     // like section 
-    // app.post("/v1/api/posts/:postId/like", async (req, res) => {
-    //   try {
-    //     const postId = req.params.postId;
-    //     // Update the like count in the database for the specified post
-    //     await communityPostCollection.updateOne(
-    //       { _id:new ObjectId(postId) },
-    //       { $inc: { likes: 1 } }
-    //     );
-    //     return res.sendStatus(200);
-    //   } catch (error) {
-    //     console.error("Error liking post:", error);
-    //     return res.status(500).json({ error: error.message }); // Log the error message
-    //   }
-    // });
+app.post("/v1/api/posts/:postId/likes", async (req, res) => {
+  try {
+    const postId = req.params.postId;
+    const userEmail = req.body.userEmail;
+
     
-    app.post("/v1/api/posts/:postId/likes", async (req, res) => {
-      try {
-        const postId = req.params.postId;
-        // Update the like count in the database for the specified post
-        await communityPostCollection.updateOne(
-          { _id: new ObjectId(postId) },
-          { $inc: { likes: 1 } }
-        );
-        return res.sendStatus(200);
-      } catch (error) {
-        console.error("Error liking post:", error);
-        return res.status(500).json({ error: error.message }); // Log the error message
-      }
-    });
+    const likedPost = await communityPostCollection.findOne({ _id: new ObjectId(postId), likedBy: userEmail });
+
+    if (likedPost) {
+     
+      await communityPostCollection.updateOne(
+        { _id: new ObjectId(postId) },
+        { $inc: { likes: -1 }, $pull: { likedBy: userEmail } }
+      );
+      console.log(`Post ${postId} unliked by user ${userEmail}`);
+    } else {
+      
+      await communityPostCollection.updateOne(
+        { _id: new ObjectId(postId) },
+        { $inc: { likes: 1 }, $push: { likedBy: userEmail } }
+      );
+      console.log(`Post ${postId} liked by user ${userEmail}`);
+    }
+
+    return res.sendStatus(200);
+  } catch (error) {
+    console.error("Error liking post:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+
     //**********community section End *******************
   } finally {
   }
