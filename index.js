@@ -10,6 +10,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "https://article-publishing-website-client.vercel.app",
+      "https://scriptlys.vercel.app",
     ],
     credentials: true,
   })
