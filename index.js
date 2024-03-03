@@ -404,37 +404,98 @@ async function run() {
     });
 
     // like section
+    // app.post("/v1/api/posts/:postId/likes", async (req, res) => {
+    //   try {
+    //     const postId = req.params.postId;
+    //     const userEmail = req.body.userEmail;
+
+    //     const likedPost = await communityPostCollection.findOne({
+    //       _id: new ObjectId(postId),
+    //       likedBy: userEmail,
+    //     });
+
+    //     if (likedPost) {
+    //       await communityPostCollection.updateOne(
+    //         { _id: new ObjectId(postId) },
+    //         { $inc: { likes: -1 }, $pull: { likedBy: userEmail } }
+    //       );
+    //       console.log(`Post ${postId} unliked by user ${userEmail}`);
+    //     } else {
+    //       await communityPostCollection.updateOne(
+    //         { _id: new ObjectId(postId) },
+    //         { $inc: { likes: 1 }, $push: { likedBy: userEmail } }
+    //       );
+    //       console.log(`Post ${postId} liked by user ${userEmail}`);
+    //     }
+
+    //     return res.sendStatus(200);
+    //   } catch (error) {
+    //     console.error("Error liking post:", error);
+    //     return res.status(500).json({ error: error.message });
+    //   }
+    // });
     app.post("/v1/api/posts/:postId/likes", async (req, res) => {
       try {
         const postId = req.params.postId;
         const userEmail = req.body.userEmail;
-
+    
+        
         const likedPost = await communityPostCollection.findOne({
           _id: new ObjectId(postId),
           likedBy: userEmail,
         });
-
+    
         if (likedPost) {
+          // If the user has already liked the post, remove the like
           await communityPostCollection.updateOne(
             { _id: new ObjectId(postId) },
             { $inc: { likes: -1 }, $pull: { likedBy: userEmail } }
           );
           console.log(`Post ${postId} unliked by user ${userEmail}`);
         } else {
+          // If the user hasn't liked the post, add the like
           await communityPostCollection.updateOne(
             { _id: new ObjectId(postId) },
             { $inc: { likes: 1 }, $push: { likedBy: userEmail } }
           );
           console.log(`Post ${postId} liked by user ${userEmail}`);
         }
-
+    
         return res.sendStatus(200);
       } catch (error) {
         console.error("Error liking post:", error);
         return res.status(500).json({ error: error.message });
       }
     });
+    app.get("/v1/api/post", async (req, res) => {
+      try {
+        const postId = req.query.post_Id;
+        const userEmail = req.query.userEmail;
+    
+        
+        const likedPost = await communityPostCollection.findOne({
+          _id: new ObjectId(postId),
+          
+        });
+    
+        if (likedPost) {
+          const userLike = likedPost.likedBy.find(like=>like === userEmail)
+          if(userLike){
+           return res.send({Success: true})
+          }
+          // If the user has already liked the post, remove the like
+         return res.send({Success: false})
 
+        } else {
+          // If the user hasn't liked the post, add the like
+         return res.send({Success: false})
+        }
+    
+        
+      } catch (error) {
+       return res.send({Success: false})
+      }
+    });
     //**********community section End *******************
   } finally {
   }
