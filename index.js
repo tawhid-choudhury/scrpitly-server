@@ -403,37 +403,6 @@ async function run() {
       }
     });
 
-    // like section
-    // app.post("/v1/api/posts/:postId/likes", async (req, res) => {
-    //   try {
-    //     const postId = req.params.postId;
-    //     const userEmail = req.body.userEmail;
-
-    //     const likedPost = await communityPostCollection.findOne({
-    //       _id: new ObjectId(postId),
-    //       likedBy: userEmail,
-    //     });
-
-    //     if (likedPost) {
-    //       await communityPostCollection.updateOne(
-    //         { _id: new ObjectId(postId) },
-    //         { $inc: { likes: -1 }, $pull: { likedBy: userEmail } }
-    //       );
-    //       console.log(`Post ${postId} unliked by user ${userEmail}`);
-    //     } else {
-    //       await communityPostCollection.updateOne(
-    //         { _id: new ObjectId(postId) },
-    //         { $inc: { likes: 1 }, $push: { likedBy: userEmail } }
-    //       );
-    //       console.log(`Post ${postId} liked by user ${userEmail}`);
-    //     }
-
-    //     return res.sendStatus(200);
-    //   } catch (error) {
-    //     console.error("Error liking post:", error);
-    //     return res.status(500).json({ error: error.message });
-    //   }
-    // });
     app.post("/v1/api/posts/:postId/likes", async (req, res) => {
       try {
         const postId = req.params.postId;
