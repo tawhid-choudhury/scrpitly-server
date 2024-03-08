@@ -1,4 +1,5 @@
 require("dotenv").config();
+const moment = require("moment");
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
@@ -407,13 +408,13 @@ async function run() {
       try {
         const postId = req.params.postId;
         const userEmail = req.body.userEmail;
-    
-        
+
+
         const likedPost = await communityPostCollection.findOne({
           _id: new ObjectId(postId),
           likedBy: userEmail,
         });
-    
+
         if (likedPost) {
           // If the user has already liked the post, remove the like
           await communityPostCollection.updateOne(
@@ -429,7 +430,7 @@ async function run() {
           );
           console.log(`Post ${postId} liked by user ${userEmail}`);
         }
-    
+
         return res.sendStatus(200);
       } catch (error) {
         console.error("Error liking post:", error);
@@ -440,31 +441,79 @@ async function run() {
       try {
         const postId = req.query.post_Id;
         const userEmail = req.query.userEmail;
-    
-        
+
+
         const likedPost = await communityPostCollection.findOne({
           _id: new ObjectId(postId),
-          
+
         });
-    
+
         if (likedPost) {
-          const userLike = likedPost.likedBy.find(like=>like === userEmail)
-          if(userLike){
-           return res.send({Success: true})
+          const userLike = likedPost.likedBy.find(like => like === userEmail)
+          if (userLike) {
+            return res.send({ Success: true })
           }
           // If the user has already liked the post, remove the like
-         return res.send({Success: false})
+          return res.send({ Success: false })
 
         } else {
           // If the user hasn't liked the post, add the like
-         return res.send({Success: false})
+          return res.send({ Success: false })
         }
-    
-        
+
+
       } catch (error) {
-       return res.send({Success: false})
+        return res.send({ Success: false })
       }
     });
+
+    // for chart
+    app.get("/articlesPerDay", async (req, res) => {
+      try {
+        // Get the current date
+        const currentDate = moment().startOf("day");
+
+        // Create an array to store the dates and article counts
+        const datesArray = [];
+        const countsArray = [];
+
+        // Iterate over the last 10 days
+        for (let i = 0; i < 10; i++) {
+          // Calculate the start date for the current iteration
+          const startDate = currentDate.clone().subtract(i, "days");
+
+          // Calculate the end date for the current iteration (next day)
+          const endDate = startDate.clone().add(1, "days");
+
+          // Count the number of articles posted on the current day
+          const articlesCount = await articleCollection.countDocuments({
+            timestamp: {
+              $gte: startDate.valueOf(),
+              $lt: endDate.valueOf(),
+            },
+          });
+
+          // Format the date in a readable format (e.g., "YYYY-MM-DD")
+          const formattedDate = startDate.format("YYYY-MM-DD");
+
+          // Add the data to the arrays
+          datesArray.push(formattedDate);
+          countsArray.push(articlesCount);
+        }
+
+        // Reverse the arrays to have the dates in ascending order
+        datesArray.reverse();
+        countsArray.reverse();
+
+        // Return the result
+        return res.json({ dates: datesArray, counts: countsArray });
+      } catch (error) {
+        console.error("Error fetching articles per day:", error);
+        return res.status(500).send("Internal Server Error");
+      }
+    });
+
+
     //**********community section End *******************
   } finally {
   }
